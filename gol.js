@@ -309,6 +309,7 @@ var Gol = Gol || {};
      */
     function update() {
 
+      /* First we advance each cell to its next state. */
       for (var i = 0; i < cells.length; i++)
         cells[i].current = cells[i].next;
 
@@ -336,10 +337,11 @@ var Gol = Gol || {};
 
     time.current = newTime;
 
+    /* Update the simulation state as required. If the simulation is paused, we
+     * don't update the state or increase the accumulator. */
     if (paused !== true) {
       time.accumulator += tickTime;
 
-      /* Update the simulation state as required */
       for ( ; time.accumulator >= time.dt; time.accumulator -= time.dt)
         update();
     }
