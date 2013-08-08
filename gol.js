@@ -31,11 +31,16 @@ var Gol = Gol || {};
        * one.
        */
       function getCellAtMouse(mouse) {
-        for (var i = 0; i < cells.length; i++)
-          if (cells[i].isInBounds(mouse.x, mouse.y))
-            return cells[i];
+        /* Get the i, j coordinates of the cell. */
+        var col = Math.floor((mouse.x - tile.offX) / (tile.size + tile.margin));
+        var row = Math.floor((mouse.y - tile.offY) / (tile.size + tile.margin));
 
-        return null;
+        /* Return nothing if the coordinates are invalid */
+        if (col > grid.w || col < 0 || row > grid.h || row < 0)
+          return null;
+
+        /* Return the cell */
+        return cells[row * grid.w + col];
       }
 
       var cell = getCellAtMouse(mouse);
@@ -140,11 +145,6 @@ var Gol = Gol || {};
 
   Cell.prototype.isAlive = function() {
     return this.current;
-  }
-
-  Cell.prototype.isInBounds = function(x, y) {
-    return (x >= this.x && x <= this.xMax &&
-            y >= this.y && y <= this.yMax);
   }
 
   Cell.prototype.update = function() {
