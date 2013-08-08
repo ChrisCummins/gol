@@ -236,9 +236,9 @@ var Gol = Gol || {};
     var stateTime = time.current - this.timestamp;
 
     if (this.isAlive()) {
-      h = (stateTime * 0.0001).mod(1);
+      h = (stateTime * tile.hueRate).mod(1);
     } else {
-      l = Math.max(0, l - (stateTime * 0.0025));
+      l = Math.max(0, l - (stateTime * tile.decayRate));
     }
 
     /* Optimise for zero-luminosity cells, by checking first to see that the
@@ -285,7 +285,9 @@ var Gol = Gol || {};
     size: 7,
     margin: 1,
     offX: 5,
-    offY: 5
+    offY: 5,
+    decayRate: 0.0015,
+    hueRate: 0.0001
   };
   var grid = {
     i: 0,
