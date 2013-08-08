@@ -241,13 +241,21 @@ var Gol = Gol || {};
       l = Math.max(0, l - (stateTime * 0.0025));
     }
 
-    var rgb = hslToRgb(h, s, l);
+    /* Optimise for zero-luminosity cells, by checking first to see that the
+     * luminosity is not zero (i.e. black) before performing the HSL
+     * conversion. */
+    if (l > 0) {
+      var rgb = hslToRgb(h, s, l);
 
-    renderer.fillStyle = 'rgb(' + Math.round(rgb[0]) + ',' +
-      Math.round(rgb[1]) + ',' +
-      Math.round(rgb[2]) + ')';
+      renderer.fillStyle = 'rgb(' + Math.round(rgb[0]) + ',' +
+        Math.round(rgb[1]) + ',' +
+        Math.round(rgb[2]) + ')';
 
-    renderer.fillRect(this.x, this.y, tile.size, tile.size);
+      renderer.fillRect(this.x, this.y, tile.size, tile.size);
+    } else {
+      /* Empty (black) square */
+      renderer.clearRect(this.x, this.y, tile.size, tile.size);
+    }
   }
 
   /*
