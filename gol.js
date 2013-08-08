@@ -4,6 +4,13 @@ var Gol = Gol || {};
   'use strict';
 
   /*
+   * A proper modulus operator.
+   */
+  Number.prototype.mod = function(n) {
+    return ((this % n) + n) % n;
+  };
+
+  /*
    * A mouse object, which maintains an internal state and is responsible for
    * attaching the relevant mouse event handlers.
    */
@@ -17,7 +24,7 @@ var Gol = Gol || {};
      * Given a mouse object, create a new cell if the mouse is positioned over a
      * cell.
      */
-    function createCellUnderMouse(mouse) {
+    function spawnCellUnderMouse(mouse) {
 
       /*
        * Returns the cell at the mouse point, or null if the mouse is not over
@@ -34,7 +41,7 @@ var Gol = Gol || {};
       var cell = getCellAtMouse(mouse);
 
       if (cell !== null)
-        cell.create();
+        cell.spawn();
     }
 
     /* Event listeners */
@@ -43,13 +50,13 @@ var Gol = Gol || {};
       this.y = event.clientY - bounds.top;
 
       if (this.leftDown)
-        createCellUnderMouse(this);
+        spawnCellUnderMouse(this);
     }, false);
 
     canvas.addEventListener('mousedown', function(event) {
       if (event.button == 0) {
         this.leftDown = true;
-        createCellUnderMouse(this);
+        spawnCellUnderMouse(this);
       } else if (event.button == 2) {
         this.rightDown = true;
         paused = true;
@@ -80,11 +87,33 @@ var Gol = Gol || {};
     this.xMax = this.x + tile.size;
     this.yMax = this.y + tile.size;
 
-    this.alive = false;
+    /* The current state of the cell. 'true' for alive, else 'false' if dead. */
+    this.current = false;
+
+    /* The state of the cell at the next turn. 'true' for alive, else 'false' if
+     * dead. */
+    this.next = false;
+
+    this.timestamp = new Date().getTime();
+  }
+
+  Cell.prototype.spawn = function() {
+    this.create();
+    this.current = this.next;
   }
 
   Cell.prototype.create = function() {
-    this.alive = true;
+    this.next = true;
+    this.timestamp = new Date().getTime();
+  }
+
+  Cell.prototype.destroy = function() {
+    this.next = false;
+    this.timestamp = new Date().getTime();
+  }
+
+  Cell.prototype.isAlive = function() {
+    return this.current;
   }
 
   Cell.prototype.isInBounds = function(x, y) {
@@ -92,8 +121,37 @@ var Gol = Gol || {};
             y >= this.y && y <= this.yMax);
   }
 
+  Cell.prototype.update = function(n) {
+
+    if (this.current === true) {
+
+      /* RULE: Any live cell with fewer than two live neighbours dies, as if
+       * caused by under-population.
+       */
+      if (n < 2)
+        this.destroy();
+
+      /*
+       * RULE: Any live cell with more than three live neighbours dies, as if by
+       * overcrowding.
+       */
+      if (n > 3)
+        this.destroy();
+
+      /* RULE: Any live cell with two or three live neighbours lives on to the
+       * next generation. */
+    } else {
+
+      /* RULE: Any dead cell with exactly three live neighbours becomes a live
+       * cell, as if by reproduction.
+       */
+      if (n === 3)
+        this.create();
+    }
+  }
+
   Cell.prototype.draw = function() {
-    renderer.fillStyle = this.alive ? '#dad7a7' : '#eeeeee';
+    renderer.fillStyle = this.current ? '#dad7a7' : '#000';
     renderer.fillRect(this.x, this.y, tile.size, tile.size);
   }
 
@@ -122,13 +180,14 @@ var Gol = Gol || {};
   var time = new Time(5);
   var tile = {
     size: 7,
-    margin: 2,
+    margin: 1,
     offX: 5,
     offY: 5
   };
   var grid = {
     i: 0,
-    j: 0
+    j: 0,
+    size: 0
   };
   var cells = [];
 
@@ -147,6 +206,43 @@ var Gol = Gol || {};
      */
     function update() {
 
+      /*
+       * Update a given cell.
+       *
+       * @n The index into the array of cells of the cell to be updated.
+       */
+      function updateCell(n) {
+        var neighbours = [];
+        var aliveNeighbours = 0;
+
+        /* Top row */
+        neighbours.push(cells[(n - grid.w - 1).mod(grid.size)]);
+        neighbours.push(cells[(n - grid.w).mod(grid.size)]);
+        neighbours.push(cells[(n - grid.w + 1).mod(grid.size)]);
+
+        /* Current row */
+        neighbours.push(cells[(n - 1).mod(grid.size)]);
+        neighbours.push(cells[(n + 1).mod(grid.size)]);
+
+        /* Bottom row */
+        neighbours.push(cells[(n + grid.w - 1).mod(grid.size)]);
+        neighbours.push(cells[(n + grid.w).mod(grid.size)]);
+        neighbours.push(cells[(n + grid.w + 1).mod(grid.size)]);
+
+        for (var i = 0; i < neighbours.length; i++) {
+          if (neighbours[i].isAlive())
+            aliveNeighbours++;
+        }
+
+        cells[n].update(aliveNeighbours);
+      }
+
+      for (var i = 0; i < cells.length; i++)
+        cells[i].current = cells[i].next;
+
+      /* Update each cell in turn */
+      for (var i = 0; i < cells.length; i++)
+        updateCell(i);
     }
 
     /*
@@ -200,8 +296,8 @@ var Gol = Gol || {};
           cells.pop();
         }
 
-        for (var i = 0; i < grid.i; i++) {
-          for (var j = 0; j < grid.j; j++) {
+        for (var j = 0; j < grid.h; j++) {
+          for (var i = 0; i < grid.w; i++) {
             cells.push(new Cell(i, j));
           }
         }
@@ -210,8 +306,9 @@ var Gol = Gol || {};
       var w = window.innerWidth - 2 * tile.offX;
       var h = window.innerHeight - 2 * tile.offY;
 
-      grid.i = Math.floor(w / (tile.size + tile.margin)) - 1;
-      grid.j = Math.floor(h / (tile.size + tile.margin)) - 1;
+      grid.w = Math.floor(w / (tile.size + tile.margin)) - 1;
+      grid.h = Math.floor(h / (tile.size + tile.margin)) - 1;
+      grid.size = grid.w * grid.h;
 
       canvas.width = w;
       canvas.height = h;
