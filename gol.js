@@ -280,7 +280,7 @@ var Gol = Gol || {};
   var bounds = canvas.getBoundingClientRect()
   var mouse = new Mouse();
   var paused = false;
-  var time = new Time(5);
+  var time = new Time(4);
   var tile = {
     size: 7,
     margin: 1,
