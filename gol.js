@@ -72,6 +72,11 @@ var Gol = Gol || {};
             y >= this.y && y <= this.yMax);
   }
 
+  Cell.prototype.draw = function() {
+    renderer.fillStyle = this.alive ? '#dad7a7' : '#eeeeee';
+    renderer.fillRect(this.x, this.y, tile.size, tile.size);
+  }
+
   var container = document.getElementById('container');
   var canvas = document.createElement('canvas')
   var renderer = canvas.getContext('2d');
@@ -94,14 +99,8 @@ var Gol = Gol || {};
 
   function render(timestamp) {
     function draw() {
-      function drawCell(cell) {
-        renderer.fillStyle = cell.alive ? '#dad7a7' : '#eeeeee';
-        renderer.fillRect(cell.x, cell.y, tile.size, tile.size);
-      }
-
-      for (var i = 0; i < cells.length; i++) {
-        drawCell(cells[i]);
-      }
+      for (var i = 0; i < cells.length; i++)
+        cells[i].draw();
     }
 
     draw();
