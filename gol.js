@@ -37,15 +37,19 @@ var Gol = Gol || {};
       if (event.button == 0) {
         this.leftDown = true;
         createCellUnderMouse(this);
-      } else if (event.button == 2)
+      } else if (event.button == 2) {
         this.rightDown = true;
+        paused = true;
+      }
     }, false);
 
     canvas.addEventListener('mouseup', function(event) {
       if (event.button == 0)
         this.leftDown = false;
-      else if (event.button == 2)
+      else if (event.button == 2) {
         this.rightDown = false;
+        paused = false;
+      }
     }, false);
   }
 
@@ -77,11 +81,22 @@ var Gol = Gol || {};
     renderer.fillRect(this.x, this.y, tile.size, tile.size);
   }
 
+  var Time = function(fps) {
+    this.fps = fps;
+    this.minFps = Math.max(0, Math.floor(this.fps / 2));
+    this.dt = 1000 / this.fps;
+    this.maxTickTime = 1000 / this.minFps;
+    this.current = new Date().getTime();
+    this.accumulator = 0;
+  }
+
   var container = document.getElementById('container');
   var canvas = document.createElement('canvas')
   var renderer = canvas.getContext('2d');
   var bounds = canvas.getBoundingClientRect()
   var mouse = new Mouse();
+  var paused = false;
+  var time = new Time(5);
 
   var tile = {
     size: 7,
@@ -98,9 +113,32 @@ var Gol = Gol || {};
   var cells = [];
 
   function render(timestamp) {
+    function update() {
+
+    }
+
     function draw() {
       for (var i = 0; i < cells.length; i++)
         cells[i].draw();
+    }
+
+    /* Update the clocks */
+    var newTime = new Date().getTime();
+    var tickTime = newTime - time.current;
+
+    /* Enforce a maximum frame time to prevent the "spiral of death" when
+     * operating under heavy load */
+    if (tickTime > time.maxTickTime)
+      tickTime = time.maxTickTime;
+
+    time.current = newTime;
+
+    if (paused !== true) {
+      time.accumulator += tickTime;
+
+      /* Update the simulation state as required */
+      for ( ; time.accumulator >= time.dt; time.accumulator -= time.dt)
+        update();
     }
 
     draw();
