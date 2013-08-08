@@ -103,6 +103,9 @@ var Gol = Gol || {};
 
     /* The eight neighbouring cells */
     this.neighbours = [];
+
+    /* The number of alive neighbours */
+    this.aliveNeighbours = 0;
   }
 
   /*
@@ -148,12 +151,12 @@ var Gol = Gol || {};
   }
 
   Cell.prototype.update = function() {
-    var n = 0;
 
     /* Get the number of living neighbours */
+    this.aliveNeighbours = 0;
     for (var i = 0; i < 8; i++) {
       if (this.neighbours[i].isAlive())
-        n++;
+        this.aliveNeighbours++;
     }
 
     if (this.current === true) {
@@ -161,14 +164,14 @@ var Gol = Gol || {};
       /* RULE: Any live cell with fewer than two live neighbours dies, as if
        * caused by under-population.
        */
-      if (n < 2)
+      if (this.aliveNeighbours < 2)
         this.destroy();
 
       /*
        * RULE: Any live cell with more than three live neighbours dies, as if by
        * overcrowding.
        */
-      if (n > 3)
+      if (this.aliveNeighbours > 3)
         this.destroy();
 
       /* RULE: Any live cell with two or three live neighbours lives on to the
@@ -178,7 +181,7 @@ var Gol = Gol || {};
       /* RULE: Any dead cell with exactly three live neighbours becomes a live
        * cell, as if by reproduction.
        */
-      if (n === 3)
+      if (this.aliveNeighbours === 3)
         this.create();
     }
   }
