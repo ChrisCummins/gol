@@ -151,8 +151,12 @@ var Gol = Gol || {};
   }
 
   Cell.prototype.draw = function() {
-    renderer.fillStyle = this.current ? '#dad7a7' : '#000';
-    renderer.fillRect(this.x, this.y, tile.size, tile.size);
+    if (this.current) {
+      renderer.fillStyle = '#dad7a7';
+      renderer.fillRect(this.x, this.y, tile.size, tile.size);
+    } else {
+      renderer.clearRect(this.x, this.y, tile.size, tile.size);
+    }
   }
 
   /*
