@@ -374,9 +374,8 @@ var Gol = Gol || {};
        */
       function newGrid() {
 
-        for (var i = 0; i < cells.length; i++) {
-          cells.pop();
-        }
+        /* Clear any existing cells. */
+        cells = [];
 
         for (var j = 0; j < grid.h; j++) {
           for (var i = 0; i < grid.w; i++) {
