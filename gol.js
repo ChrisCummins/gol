@@ -244,6 +244,8 @@ var Gol = Gol || {};
       l = Math.max(0, l - (stateTime * tile.decayRate));
     }
 
+    l += this.aliveNeighbours * tile.lumInfluence;
+
     /* Optimise for zero-luminosity cells, by checking first to see that the
      * luminosity is not zero (i.e. black) before performing the HSL
      * conversion. */
@@ -290,7 +292,8 @@ var Gol = Gol || {};
     offX: 5,
     offY: 5,
     decayRate: 0.0015,
-    hueRate: 0.0001
+    hueRate: 0.0001,
+    lumInfluence: 0.025
   };
   var grid = {
     i: 0,
