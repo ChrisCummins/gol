@@ -282,7 +282,7 @@ var Gol = Gol || {};
   var paused = false;
   var time = new Time(4);
   var tile = {
-    size: 7,
+    size: 10,
     margin: 1,
     offX: 5,
     offY: 5,
