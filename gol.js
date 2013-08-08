@@ -95,6 +95,32 @@ var Gol = Gol || {};
     this.next = false;
 
     this.timestamp = new Date().getTime();
+
+    /* The eight neighbouring cells */
+    this.neighbours = [];
+  }
+
+  /*
+   * Initialise a cell. This must be called after all of the cells in a grid
+   * have been instantiated.
+   */
+  Cell.prototype.init = function() {
+    /* Index into cells array */
+    var n = grid.w * this.j + this.i;
+
+    /* Top row */
+    this.neighbours.push(cells[(n - grid.w - 1).mod(grid.size)]);
+    this.neighbours.push(cells[(n - grid.w).mod(grid.size)]);
+    this.neighbours.push(cells[(n - grid.w + 1).mod(grid.size)]);
+
+    /* Current row */
+    this.neighbours.push(cells[(n - 1).mod(grid.size)]);
+    this.neighbours.push(cells[(n + 1).mod(grid.size)]);
+
+    /* Bottom row */
+    this.neighbours.push(cells[(n + grid.w - 1).mod(grid.size)]);
+    this.neighbours.push(cells[(n + grid.w).mod(grid.size)]);
+    this.neighbours.push(cells[(n + grid.w + 1).mod(grid.size)]);
   }
 
   Cell.prototype.spawn = function() {
@@ -121,7 +147,14 @@ var Gol = Gol || {};
             y >= this.y && y <= this.yMax);
   }
 
-  Cell.prototype.update = function(n) {
+  Cell.prototype.update = function() {
+    var n = 0;
+
+    /* Get the number of living neighbours */
+    for (var i = 0; i < 8; i++) {
+      if (this.neighbours[i].isAlive())
+        n++;
+    }
 
     if (this.current === true) {
 
@@ -268,43 +301,12 @@ var Gol = Gol || {};
      */
     function update() {
 
-      /*
-       * Update a given cell.
-       *
-       * @n The index into the array of cells of the cell to be updated.
-       */
-      function updateCell(n) {
-        var neighbours = [];
-        var aliveNeighbours = 0;
-
-        /* Top row */
-        neighbours.push(cells[(n - grid.w - 1).mod(grid.size)]);
-        neighbours.push(cells[(n - grid.w).mod(grid.size)]);
-        neighbours.push(cells[(n - grid.w + 1).mod(grid.size)]);
-
-        /* Current row */
-        neighbours.push(cells[(n - 1).mod(grid.size)]);
-        neighbours.push(cells[(n + 1).mod(grid.size)]);
-
-        /* Bottom row */
-        neighbours.push(cells[(n + grid.w - 1).mod(grid.size)]);
-        neighbours.push(cells[(n + grid.w).mod(grid.size)]);
-        neighbours.push(cells[(n + grid.w + 1).mod(grid.size)]);
-
-        for (var i = 0; i < neighbours.length; i++) {
-          if (neighbours[i].isAlive())
-            aliveNeighbours++;
-        }
-
-        cells[n].update(aliveNeighbours);
-      }
-
       for (var i = 0; i < cells.length; i++)
         cells[i].current = cells[i].next;
 
       /* Update each cell in turn */
       for (var i = 0; i < cells.length; i++)
-        updateCell(i);
+        cells[i].update();
     }
 
     /*
@@ -362,6 +364,11 @@ var Gol = Gol || {};
           for (var i = 0; i < grid.w; i++) {
             cells.push(new Cell(i, j));
           }
+        }
+
+        /* Now that we have created the cells, we must initialise them. */
+        for (var i = 0; i < cells.length; i++) {
+          cells[i].init();
         }
       }
 
