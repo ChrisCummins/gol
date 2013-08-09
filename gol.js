@@ -292,7 +292,7 @@ var Gol = Gol || {};
     offX: 5,
     offY: 5,
     decayRate: 0.0015,
-    hueRate: 0.0001,
+    hueRate: 0.0002,
     lumInfluence: 0.025
   };
   var grid = {
