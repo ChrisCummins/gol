@@ -380,6 +380,10 @@ var Gol = Gol || {};
         for (var j = 0; j < grid.h; j++) {
           for (var i = 0; i < grid.w; i++) {
             cells.push(new Cell(i, j));
+
+            /* Randomly populate the starting grid. */
+            if (Math.random() > 0.85)
+              cells[j * grid.w + i].create();
           }
         }
 
